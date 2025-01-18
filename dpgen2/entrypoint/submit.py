@@ -495,6 +495,9 @@ def workflow_concurrent_learning(
     upload_python_packages = config.get("upload_python_packages", None)
     train_optional_files = config["train"].get("optional_files", None)
 
+    collect_data_config["spin_norm"] = config["inputs"]["spin_norm"]
+    collect_data_config["virtual_len"] = config["inputs"]["virtual_len"]
+
     if train_style == "dp":
         init_models_paths = config["train"].get("init_models_paths", None)
         numb_models = config["train"]["numb_models"]
@@ -652,8 +655,7 @@ def workflow_concurrent_learning(
             config["inputs"]["mixed_type"],
             finetune_mode="finetune",
         )
-    optional_parameter["spin_norm"] = config["inputs"]["spin_norm"]
-    optional_parameter["virtual_len"] = config["inputs"]["virtual_len"]
+
     # here the scheduler is passed as input parameter to the concurrent_learning_op
     dpgen_step = Step(
         "dpgen-step",
