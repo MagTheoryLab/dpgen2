@@ -37,8 +37,7 @@ class CollectData(OP):
 
     default_optional_parameter = {
         "mixed_type": False,
-        "spin_norm":None,
-        "virtual_len":None
+
     }
 
     @classmethod
@@ -96,7 +95,7 @@ class CollectData(OP):
         virtual_len = ip["optional_parameter"]["virtual_len"]
         labeled_data = ip["labeled_data"]
         iter_data = ip["iter_data"]
-
+        print(ip["optional_parameter"])
         ms = dpdata.MultiSystems(type_map=type_map)
         for ii in labeled_data:
             if ii and len(list(ii.rglob("fparam.npy"))) > 0:
