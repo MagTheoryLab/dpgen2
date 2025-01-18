@@ -212,8 +212,8 @@ def _block_cl(
     collect_data_optional_parameter = make_collect_data_optional_parameter(
         block_steps.inputs.parameters["optional_parameter"]
     )
-    collect_data_optional_parameter["spin_norm"] = collect_data_config.pop(["spin_norm"])
-    collect_data_optional_parameter["virtual_len"] =collect_data_config.pop(["virtual_len"])
+    collect_data_optional_parameter["spin_norm"] = collect_data_config.pop("spin_norm")
+    collect_data_optional_parameter["virtual_len"] =collect_data_config.pop("virtual_len")
 
     prep_run_dp_train = Step(
         name + "-prep-run-dp-train",
