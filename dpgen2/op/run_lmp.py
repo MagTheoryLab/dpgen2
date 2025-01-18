@@ -271,6 +271,7 @@ def set_models(lmp_input_name: str, model_names: List[str]):
     match_last = -1
     pattern = model_name_match_pattern
     for sidx, ii in enumerate(new_line_split):
+        print(ii,pattern,re.fullmatch(pattern, ii),match_first,match_last)
         if re.fullmatch(pattern, ii) is not None:
             if match_first == -1:
                 match_first = sidx

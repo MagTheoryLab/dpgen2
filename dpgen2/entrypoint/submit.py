@@ -588,6 +588,8 @@ def workflow_concurrent_learning(
 
     fp_config["inputs"] = fp_inputs
     fp_config["run"] = config["fp"]["run_config"]
+    fp_config["run"]["spin_norm"] = config["inputs"]["spin_norm"]
+    fp_config["run"]["virtual_len"] = config["inputs"]["virtual_len"]
     fp_config["extra_output_files"] = config["fp"]["extra_output_files"]
     if fp_style == "deepmd":
         assert (
@@ -641,6 +643,7 @@ def workflow_concurrent_learning(
         config["inputs"]["mixed_type"],
     )
 
+
     if config["inputs"].get("do_finetune", False):
         if train_config["init_model_policy"] != "yes":
             logging.warning("In finetune mode, init_model_policy is forced to be 'yes'")
@@ -649,7 +652,8 @@ def workflow_concurrent_learning(
             config["inputs"]["mixed_type"],
             finetune_mode="finetune",
         )
-
+    optional_parameter["spin_norm"] = config["inputs"]["spin_norm"]
+    optional_parameter["virtual_len"] = config["inputs"]["virtual_len"]
     # here the scheduler is passed as input parameter to the concurrent_learning_op
     dpgen_step = Step(
         "dpgen-step",

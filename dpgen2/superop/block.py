@@ -74,6 +74,8 @@ block_default_optional_parameter = {
 def make_collect_data_optional_parameter(block_optional_parameter):
     return {
         "mixed_type": block_optional_parameter["data_mixed_type"],
+        "spin_norm":block_optional_parameter.get("spin_norm", None) ,
+        "virtual_len": block_optional_parameter.get("virtual_len", None) ,
     }
 
 
