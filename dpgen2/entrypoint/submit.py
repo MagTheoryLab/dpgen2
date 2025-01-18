@@ -490,7 +490,7 @@ def workflow_concurrent_learning(
     prep_fp_config = config["step_configs"]["prep_fp_config"]
     run_fp_config = config["step_configs"]["run_fp_config"]
     select_confs_config = config["step_configs"]["select_confs_config"]
-    collect_data_config = config["step_configs"]["collect_data_config"]
+    collect_data_config = deepcopy(config["step_configs"]["collect_data_config"])
     cl_step_config = config["step_configs"]["cl_step_config"]
     upload_python_packages = config.get("upload_python_packages", None)
     train_optional_files = config["train"].get("optional_files", None)
