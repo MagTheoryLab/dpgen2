@@ -95,7 +95,7 @@ class CollectData(OP):
         virtual_len = ip["optional_parameter"]["virtual_len"]
         labeled_data = ip["labeled_data"]
         iter_data = ip["iter_data"]
-        print(ip["optional_parameter"])
+
         ms = dpdata.MultiSystems(type_map=type_map)
         for ii in labeled_data:
             if ii and len(list(ii.rglob("fparam.npy"))) > 0:
@@ -113,7 +113,7 @@ class CollectData(OP):
             raise NotImplementedError("mixed_type is not supported dpspin_tf/npy format")
             ms.to_deepmd_npy_mixed(name)  # type: ignore
         else:
-            ms.to(name,fmt="dpspin_tf/npy",  spin_norm=spin_norm, virtual_len=virtual_len)  # type: ignore
+            ms.to_dpspin_tf_npy(name,  spin_norm=spin_norm, virtual_len=virtual_len)  # type: ignore
         iter_data.append(Path(name))
 
         return OPIO(
