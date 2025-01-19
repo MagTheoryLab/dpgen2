@@ -180,14 +180,14 @@ class RunDeltaSpin(RunFp):
             Argument(
                 "spin_norm",
                 list,
-                optional=False,
+                optional=True,
                 default=[],
                 doc=doc_deltaspin_spin_norm,
             ),
             Argument(
                 "virtual_len",
                 list,
-                optional=False,
+                optional=True,
                 default=[],
                 doc=doc_deltaspin_virtual_len,
             ),
