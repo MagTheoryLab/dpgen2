@@ -102,13 +102,13 @@ class CollectData(OP):
                 setup_ele_temp(False)
             if ii and len(list(ii.rglob("aparam.npy"))) > 0:
                 setup_ele_temp(True)
-            ss = dpdata.LabeledSystem(ii, fmt="dpspin_tf/npy", spin_norm=spin_norm, virtual_len=virtual_len)
+            ss = dpdata.LabeledSystem(ii, fmt="dpspin_tf/npy",type_map=type_map, spin_norm=spin_norm, virtual_len=virtual_len)
             ms.append(ss)
 
         # NOTICE:
         # if ms.get_nframes() == 0, ms.to_deepmd_npy would not make the dir Path(name)
         Path(name).mkdir()
-        print(name)
+
         if mixed_type:
             raise NotImplementedError("mixed_type is not supported dpspin_tf/npy format")
             ms.to_deepmd_npy_mixed(name)  # type: ignore
