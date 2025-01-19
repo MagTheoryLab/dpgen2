@@ -108,12 +108,13 @@ class CollectData(OP):
         # NOTICE:
         # if ms.get_nframes() == 0, ms.to_deepmd_npy would not make the dir Path(name)
         Path(name).mkdir()
-
+        print(name)
         if mixed_type:
             raise NotImplementedError("mixed_type is not supported dpspin_tf/npy format")
             ms.to_deepmd_npy_mixed(name)  # type: ignore
         else:
-            ms.to_dpspin_tf_npy(name,  spin_norm=spin_norm, virtual_len=virtual_len)  # type: ignore
+            ms.to("dpspin_tf/npy",name,  spin_norm=spin_norm, virtual_len=virtual_len)  # type: ignore
+
         iter_data.append(Path(name))
 
         return OPIO(
