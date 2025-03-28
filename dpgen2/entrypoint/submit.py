@@ -591,8 +591,8 @@ def workflow_concurrent_learning(
 
     fp_config["inputs"] = fp_inputs
     fp_config["run"] = config["fp"]["run_config"]
-    fp_config["run"]["spin_norm"] = config["inputs"]["spin_norm"]
-    fp_config["run"]["virtual_len"] = config["inputs"]["virtual_len"]
+    # fp_config["run"]["spin_norm"] = config["inputs"]["spin_norm"]
+    # fp_config["run"]["virtual_len"] = config["inputs"]["virtual_len"]
     fp_config["extra_output_files"] = config["fp"]["extra_output_files"]
     if fp_style == "deepmd":
         assert (

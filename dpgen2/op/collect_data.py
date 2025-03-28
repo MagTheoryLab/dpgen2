@@ -102,7 +102,7 @@ class CollectData(OP):
                 setup_ele_temp(False)
             if ii and len(list(ii.rglob("aparam.npy"))) > 0:
                 setup_ele_temp(True)
-            ss = dpdata.LabeledSystem(ii, fmt="dpspin_tf/npy",type_map=type_map, spin_norm=spin_norm, virtual_len=virtual_len)
+            ss = dpdata.LabeledSystem(ii, fmt="deepmd/npy",type_map=type_map,  )
             ms.append(ss)
 
         # NOTICE:
