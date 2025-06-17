@@ -91,8 +91,8 @@ class CollectData(OP):
         name = ip["name"]
         type_map = ip["type_map"]
         mixed_type = ip["optional_parameter"]["mixed_type"]
-        spin_norm = ip["optional_parameter"]["spin_norm"]
-        virtual_len = ip["optional_parameter"]["virtual_len"]
+        data_format = ip["optional_parameter"]["data_format"]
+        format_kwargs = ip["optional_parameter"]["format_kwargs"]
         labeled_data = ip["labeled_data"]
         iter_data = ip["iter_data"]
 
@@ -113,7 +113,7 @@ class CollectData(OP):
             raise NotImplementedError("mixed_type is not supported dpspin_tf/npy format")
             ms.to_deepmd_npy_mixed(name)  # type: ignore
         else:
-            ms.to("dpspin_tf/npy",name,  spin_norm=spin_norm, virtual_len=virtual_len)  # type: ignore
+            ms.to(data_format,name, **format_kwargs)  # type: ignore
 
         iter_data.append(Path(name))
 

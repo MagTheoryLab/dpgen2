@@ -495,8 +495,8 @@ def workflow_concurrent_learning(
     upload_python_packages = config.get("upload_python_packages", None)
     train_optional_files = config["train"].get("optional_files", None)
 
-    collect_data_config["spin_norm"] = config["inputs"]["spin_norm"]
-    collect_data_config["virtual_len"] = config["inputs"]["virtual_len"]
+    collect_data_config["data_format"] = config["inputs"]["data_format"]
+    collect_data_config["format_kwargs"] = config["inputs"]["format_kwargs"]
 
     if train_style == "dp":
         init_models_paths = config["train"].get("init_models_paths", None)
