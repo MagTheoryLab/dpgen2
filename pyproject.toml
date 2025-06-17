@@ -22,7 +22,7 @@ dependencies = [
 	     'scipy',
 	     'lbg',
 	     'packaging',
-	     'fpop',
+	     "fpop @ git+https://github.com/pxlxingliang/fpop.git@spin",
 	     'dpgui',
              'cp2kdata',
 ]
