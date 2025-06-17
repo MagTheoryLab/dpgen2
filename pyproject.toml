@@ -17,7 +17,7 @@ classifiers = [
 dependencies = [
 	     'numpy',
 
-    "dpdata @ git+https://github.com/aboys-cb/dpdata.git@devel",
+    "dpdata @ git+https://github.com/MagTheoryLab/dpdata.git@devel",
 	     'pydflow>=1.8.88',
 
 	     'dargs>=0.3.1',
