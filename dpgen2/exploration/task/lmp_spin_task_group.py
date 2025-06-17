@@ -105,6 +105,7 @@ class LmpSpinTaskGroup(ConfSamplingTaskGroup):
         return task
 
 
+
 def find_only_one_key(lmp_lines, key):
     found = []
     for idx in range(len(lmp_lines)):
