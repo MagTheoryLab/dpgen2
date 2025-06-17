@@ -389,7 +389,7 @@ def variant_task_group():
                 "lmp-spin",
                 dict,
                 lmp_spin_task_group_args(),
-                doc=doc_lmp_template,
+                doc=doc_lmp_spin,
             ),
             Argument(
                 "customized-lmp-template",
@@ -397,12 +397,7 @@ def variant_task_group():
                 customized_lmp_template_task_group_args(),
                 doc=doc_customized_lmp_template,
             ),
-            Argument(
-                "lmp-spin",
-                dict,
-                lmp_spin_task_group_args(),
-                doc=doc_lmp_spin,
-            ),
+
         ],
         doc=doc,
     )
@@ -747,15 +742,7 @@ def make_lmp_task_group_from_config(
             sh_cmd,
             **config,
         )
-    elif config["type"] == "lmp-spin":
-        tgroup = LmpSpinTaskGroup()
-        config.pop("type")
-        lmp_spin_template = config.pop("lmp_template_fname")
-        tgroup.set_lmp(
-            numb_models,
-            lmp_spin_template,
-            **config,
-        )
+
     else:
         raise RuntimeError("unknown task group type: ", config["type"])
     return tgroup
