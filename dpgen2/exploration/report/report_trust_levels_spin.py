@@ -40,6 +40,8 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
         self.conv_accuracy = conv_accuracy
         self.clear()
         self.model_devi = None
+        self._no_candidate = False
+
 
         print_tuple = (
             "stage",
@@ -57,8 +59,10 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
         spaces = [8, 8, 8, 10, 10, 10, 10, 10, 10, 10, 8]
         self.fmt_str = " ".join([f"%{ii}s" for ii in spaces])
         self.fmt_flt = "%.4f"
+        
         self.header_str = "#" + self.fmt_str % print_tuple
-
+    def no_candidate(self) -> bool:
+        return self._no_candidate
     @staticmethod
     def args() -> List[Argument]:
         doc_level_af_lo = "The lower trust level of atomic force model deviation"
@@ -121,6 +125,8 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
         assert len(self.traj_accu) == ntraj
         assert len(self.traj_fail) == ntraj
         self.model_devi = model_devi
+        self._no_candidate = sum([len(ii) for ii in self.traj_cand]) == 0
+
 
     def _get_indexes(
         self,
