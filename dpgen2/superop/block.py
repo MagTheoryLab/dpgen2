@@ -212,6 +212,8 @@ def _block_cl(
     collect_data_optional_parameter = make_collect_data_optional_parameter(
         block_steps.inputs.parameters["optional_parameter"]
     )
+    print(block_steps.inputs.parameters)
+
     collect_data_optional_parameter["spin_norm"] = collect_data_config.pop("spin_norm")
     collect_data_optional_parameter["virtual_len"] =collect_data_config.pop("virtual_len")
 
