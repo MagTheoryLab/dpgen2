@@ -105,6 +105,7 @@ class RunDeltaSpin(RunFp):
     def run_task(
         self,
         command: str,
+
         out: str,
         log: str,
     ) -> Tuple[str, str]:
@@ -149,7 +150,7 @@ class RunDeltaSpin(RunFp):
             raise TransientError("DeltaSpin failed")
         # convert the output to deepmd/npy format
         sys = dpdata.LabeledSystem("OUTCAR", fmt="vasp_deltaspin/outcar")
-        sys.to("deepmd/npy", out_name)
+        sys.to("deepmd/npy", out_name )
         return out_name, log_name
 
     @staticmethod
@@ -163,6 +164,7 @@ class RunDeltaSpin(RunFp):
         """
 
         doc_deltaspin_cmd = "The command of DeltaSpin"
+
         doc_deltaspin_log = "The log file name of DeltaSpin"
         doc_deltaspin_out = "The output dir name of labeled data. In `deepmd/spin/npy` format provided by `dpdata`."
         return [
@@ -173,6 +175,7 @@ class RunDeltaSpin(RunFp):
                 default="vasp_deltaspin",
                 doc=doc_deltaspin_cmd,
             ),
+
             Argument(
                 "out",
                 str,

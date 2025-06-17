@@ -37,6 +37,7 @@ class CollectData(OP):
 
     default_optional_parameter = {
         "mixed_type": False,
+
     }
 
     @classmethod
@@ -90,6 +91,8 @@ class CollectData(OP):
         name = ip["name"]
         type_map = ip["type_map"]
         mixed_type = ip["optional_parameter"]["mixed_type"]
+        data_format = ip["optional_parameter"]["data_format"]
+        format_kwargs = ip["optional_parameter"]["format_kwargs"]
         labeled_data = ip["labeled_data"]
         iter_data = ip["iter_data"]
 
@@ -99,16 +102,19 @@ class CollectData(OP):
                 setup_ele_temp(False)
             if ii and len(list(ii.rglob("aparam.npy"))) > 0:
                 setup_ele_temp(True)
-            ss = dpdata.LabeledSystem(ii, fmt="deepmd/npy")
+            ss = dpdata.LabeledSystem(ii, fmt="deepmd/npy",type_map=type_map,  )
             ms.append(ss)
 
         # NOTICE:
         # if ms.get_nframes() == 0, ms.to_deepmd_npy would not make the dir Path(name)
         Path(name).mkdir()
+
         if mixed_type:
+            raise NotImplementedError("mixed_type is not supported dpspin_tf/npy format")
             ms.to_deepmd_npy_mixed(name)  # type: ignore
         else:
-            ms.to_deepmd_npy(name)  # type: ignore
+            ms.to(data_format,name, **format_kwargs)  # type: ignore
+
         iter_data.append(Path(name))
 
         return OPIO(

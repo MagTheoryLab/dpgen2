@@ -74,6 +74,7 @@ block_default_optional_parameter = {
 def make_collect_data_optional_parameter(block_optional_parameter):
     return {
         "mixed_type": block_optional_parameter["data_mixed_type"],
+
     }
 
 
@@ -212,6 +213,12 @@ def _block_cl(
         block_steps.inputs.parameters["optional_parameter"]
     )
 
+
+    collect_data_optional_parameter["data_format"] = collect_data_config.pop("data_format")
+    if "format_kwargs" in collect_data_config:
+        collect_data_optional_parameter["format_kwargs"] =collect_data_config.pop("format_kwargs")
+    else:
+        collect_data_optional_parameter["format_kwargs"] = {}
     prep_run_dp_train = Step(
         name + "-prep-run-dp-train",
         template=prep_run_dp_train_op,

@@ -37,6 +37,8 @@ from dflow.python import (
     upload_packages,
 )
 
+from op import CollectData
+
 try:
     from context import (
         dpgen2,
@@ -130,10 +132,15 @@ class TestMockedCollectDataArgo(unittest.TestCase):
                 shutil.rmtree(ii)
 
     def test(self):
+        collect_data_optional_parameter={
+            "mixed_type":False,
+            "spin_norm":[1.49],
+            "virtual_len":[0.3],
+        }
         coll_data = Step(
             "coll-data",
             template=PythonOPTemplate(
-                MockedCollectData,
+                CollectData,
                 image=default_image,
                 output_artifact_archive={
                     "iter_data": None,
@@ -143,6 +150,8 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             parameters={
                 "name": self.name,
                 "type_map": self.type_map,
+                "optional_parameter": collect_data_optional_parameter,
+
             },
             artifacts={
                 "iter_data": self.iter_data,

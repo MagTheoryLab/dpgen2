@@ -499,10 +499,13 @@ def workflow_concurrent_learning(
     prep_fp_config = config["step_configs"]["prep_fp_config"]
     run_fp_config = config["step_configs"]["run_fp_config"]
     select_confs_config = config["step_configs"]["select_confs_config"]
-    collect_data_config = config["step_configs"]["collect_data_config"]
+    collect_data_config = deepcopy(config["step_configs"]["collect_data_config"])
     cl_step_config = config["step_configs"]["cl_step_config"]
     upload_python_packages = config.get("upload_python_packages", None)
     train_optional_files = config["train"].get("optional_files", None)
+
+    collect_data_config["data_format"] = config["inputs"]["data_format"]
+    collect_data_config["format_kwargs"] = config["inputs"]["format_kwargs"]
 
     if train_style == "dp":
         init_models_paths = config["train"].get("init_models_paths", None)
@@ -597,6 +600,8 @@ def workflow_concurrent_learning(
 
     fp_config["inputs"] = fp_inputs
     fp_config["run"] = config["fp"]["run_config"]
+    # fp_config["run"]["spin_norm"] = config["inputs"]["spin_norm"]
+    # fp_config["run"]["virtual_len"] = config["inputs"]["virtual_len"]
     fp_config["extra_output_files"] = config["fp"]["extra_output_files"]
     if fp_style == "deepmd":
         assert (
@@ -649,6 +654,7 @@ def workflow_concurrent_learning(
     optional_parameter = make_optional_parameter(
         config["inputs"]["mixed_type"],
     )
+
 
     if config["inputs"].get("do_finetune", False):
         if train_config["init_model_policy"] != "yes":
