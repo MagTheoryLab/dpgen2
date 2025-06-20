@@ -383,13 +383,13 @@ def make_lmp_naive_exploration_scheduler(config):
     conv_style = convergence.pop("type")
     report = conv_styles[conv_style](**convergence)
 
-    # if "spin" in conv_style:
-    #     render = TrajRenderLammpsSpin(nopbc=output_nopbc, use_ele_temp=use_ele_temp,
-    #                                   lammps_input_file = config["explore"]["lammps_input_file"])
-    # else:
-    render = TrajRenderLammps(nopbc=output_nopbc, use_ele_temp=use_ele_temp,
-                              lammps_input_file=config["explore"]["lammps_input_file"],
-                              )
+    if "spin" in conv_style:
+        render = TrajRenderLammpsSpin(nopbc=output_nopbc, use_ele_temp=use_ele_temp,
+                                      lammps_input_file = config["explore"]["lammps_input_file"])
+    else:
+        render = TrajRenderLammps(nopbc=output_nopbc, use_ele_temp=use_ele_temp,
+                                  lammps_input_file=config["explore"]["lammps_input_file"],
+                                  )
 
     # selector
     selector = ConfSelectorFrames(

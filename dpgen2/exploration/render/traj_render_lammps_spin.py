@@ -31,9 +31,14 @@ class TrajRenderLammpsSpin(TrajRender):
         self,
         nopbc: bool = False,
         use_ele_temp: int = 0,
+            lammps_input_file: str = None,  # type: ignore
     ):
         self.nopbc = nopbc
 
+        if lammps_input_file is not None:
+            self.lammps_input = Path(lammps_input_file).read_text()
+        else:
+            self.lammps_input = None
     def get_model_devi(
         self,
         files: List[Path],
@@ -67,9 +72,14 @@ class TrajRenderLammpsSpin(TrajRender):
         ntraj = len(trajs)
         traj_fmt = "lammps/dump"
         ms = dpdata.MultiSystems(type_map=type_map)
+        if self.lammps_input is not None:
+            lammps_input_file = "lammps_input.in"
+            Path(lammps_input_file).write_text(self.lammps_input)
+        else:
+            lammps_input_file = None
         for ii in range(ntraj):
             if len(id_selected[ii]) > 0:
-                ss = dpdata.System(trajs[ii], fmt=traj_fmt, type_map=type_map)
+                ss = dpdata.System(trajs[ii], fmt=traj_fmt, type_map=type_map, input_file=lammps_input_file)
                 ss.nopbc = self.nopbc
                 ss = ss.sub_system(id_selected[ii])
                 ms.append(ss)
