@@ -46,7 +46,7 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
         lmp_template_fname: str,
         plm_template_fname: Optional[str] = None,
         revisions: dict = {},
-        hubbard_u: dict|None = None,
+        hubbard_u: dict  = {},
     ) -> None:
         if hubbard_u is None or hubbard_u == {}:
             raise ValueError("hubbard_u is required")
