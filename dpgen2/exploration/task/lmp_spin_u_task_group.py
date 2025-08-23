@@ -61,7 +61,7 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
 
     def make_task(
         self,
-    ) -> "LmpSpinTaskGroup":
+    ) -> "LmpSpinUTaskGroup":
         if not self.conf_set:
             raise RuntimeError("confs are not set")
         if not self.lmp_set:

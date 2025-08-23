@@ -329,11 +329,11 @@ def customized_lmp_template_task_group_args():
     ]
 
 
-def lmp_spin_task_group_args():
+def lmp_spin_u_task_group_args():
     doc_lmp_template_fname = "The file name of lammps input template"
     doc_plm_template_fname = "The file name of plumed input template"
     doc_revisions = "The revisions. Should be a dict providing the key - list of desired values pair. Key is the word to be replaced in the templates, and it may appear in both the lammps and plumed input templates. All values in the value list will be enmerated."
-
+    doc_hubbard_u='u value for each element, eg: {"Fe":{"u":[3.2,4]}}'
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
         Argument(
@@ -365,6 +365,13 @@ def lmp_spin_task_group_args():
             default={},
             doc=doc_revisions,
         ),
+        Argument(
+            "hubbard_u",
+            dict,
+            optional=False,
+            default={},
+            doc=doc_hubbard_u,
+        )
     ]
 
 
@@ -390,6 +397,12 @@ def variant_task_group():
                 "lmp-spin",
                 dict,
                 lmp_spin_task_group_args(),
+                doc=doc_lmp_spin,
+            ),
+            Argument(
+                "lmp-spin-u",
+                dict,
+                lmp_spin_u_task_group_args(),
                 doc=doc_lmp_spin,
             ),
             Argument(

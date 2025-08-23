@@ -121,7 +121,8 @@ class PrepUAbacus(PrepAbacus):
 
         conf_frame.to('abacus/stru', 'STRU', pp_file=pp, numerical_orbital=orb, numerical_descriptor=dpks, mass=mass,
                       mag=mag, sc=sc)
-        conf_frame.data["hubbard_u"]=np.array([[[1],[1]]])
+        #debug
+        # conf_frame.data["hubbard_u"]=np.array([[[1],[1]]])
         if "hubbard_u" in conf_frame.data:
             hubbard_u = conf_frame["hubbard_u"].flatten()
 
