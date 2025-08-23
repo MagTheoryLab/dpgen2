@@ -13,6 +13,10 @@ from .diffcsp_task_group import (
 from .lmp_spin_task_group import (
     LmpSpinTaskGroup,
 )
+from .lmp_spin_u_task_group import (
+    LmpSpinUTaskGroup
+
+)
 from .lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )

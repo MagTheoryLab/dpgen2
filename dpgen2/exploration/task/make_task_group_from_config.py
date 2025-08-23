@@ -22,6 +22,7 @@ from dpgen2.exploration.task.customized_lmp_template_task_group import (
 from dpgen2.exploration.task.lmp_spin_task_group import (
     LmpSpinTaskGroup,
 )
+from dpgen2.exploration.task.lmp_spin_u_task_group import LmpSpinUTaskGroup
 from dpgen2.exploration.task.lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )
@@ -726,6 +727,15 @@ def make_lmp_task_group_from_config(
         )
     elif config["type"] == "lmp-spin":
         tgroup = LmpSpinTaskGroup()
+        config.pop("type")
+        lmp_template = config.pop("lmp_template_fname")
+        tgroup.set_lmp(
+            numb_models,
+            lmp_template,
+            **config,
+        )
+    elif config["type"] == "lmp-spin-u":
+        tgroup = LmpSpinUTaskGroup()
         config.pop("type")
         lmp_template = config.pop("lmp_template_fname")
         tgroup.set_lmp(

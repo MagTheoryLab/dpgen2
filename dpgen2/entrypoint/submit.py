@@ -423,6 +423,7 @@ def make_lmp_naive_exploration_scheduler(config):
                 conf_list += sys_configs_lmp[ii]
             # make task group
             tgroup = make_lmp_task_group_from_config(numb_models, mass_map, jconf)
+            tgroup.type_map = type_map
             # add the list to task group
             tgroup.set_conf(
                 conf_list,
@@ -595,12 +596,17 @@ def workflow_concurrent_learning(
 
     fp_config = {}
     fp_inputs_config = config["fp"]["inputs_config"]
+    if "orbital_corr" in fp_inputs_config:
+
+        fp_config["optional_input"]={
+            "orbital_corr": fp_inputs_config.pop("orbital_corr")
+        }
+
     fp_inputs = fp_styles[fp_style]["inputs"](**fp_inputs_config)
 
     fp_config["inputs"] = fp_inputs
     fp_config["run"] = config["fp"]["run_config"]
-    # fp_config["run"]["spin_norm"] = config["inputs"]["spin_norm"]
-    # fp_config["run"]["virtual_len"] = config["inputs"]["virtual_len"]
+
     fp_config["extra_output_files"] = config["fp"]["extra_output_files"]
     if fp_style == "deepmd":
         assert (

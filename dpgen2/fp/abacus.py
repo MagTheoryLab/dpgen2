@@ -2,10 +2,11 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
+    List, Optional, Dict,
 )
 
 import dpdata
+import numpy as np
 from dargs import (
     Argument,
 )
@@ -71,6 +72,80 @@ class FpOpAbacusInputs(AbacusInputs):  # type: ignore
             ),
         ]
 
+class PrepUAbacus(PrepAbacus):
+    def prep_task(
+            self,
+            conf_frame,
+            inputs: AbacusInputs,
+            prepare_image_config: Optional[Dict] = None,
+            optional_input: Optional[Dict] = None,
+            optional_artifact: Optional[Dict] = None,
+    ):
+        r"""Define how one Abacus task is prepared.
+
+        Parameters
+        ----------
+        conf_frame : dpdata.System
+            One frame of configuration in the dpdata format.
+        inputs: AbacusInputs
+            The AbacusInputs object handels all other input files of the task.
+        prepare_image_config: Dict
+            Definition of runtime parameters in the process of preparing tasks.
+        optional_input:
+            Other parameters the developers or users may need.
+        optional_artifact
+            Other files that users or developers need.
+        """
+
+
+        element_list = conf_frame['atom_names']
+        pp, orb = inputs.write_pporb(element_list)
+        dpks = inputs.write_deepks()
+        mass = inputs.get_mass(element_list)
+
+        if len(orb)==0:
+            orb=None
+
+        # if conf_frame has the spins, then we will use it as the initial mag and write it to STRU
+        mag = conf_frame.data.get("spins", None)
+        if mag is not None:
+            mag = mag[0]  # spins is the mag of several frames, here we only use the first frame
+
+        # if the constrain_elements is set, we will set the related flag in STRU
+        sc = None
+        c_eles = inputs.get_constrain_elements()
+        if c_eles:
+            atom_names = conf_frame.data["atom_names"]
+            atom_types = [atom_names[i] for i in conf_frame.data["atom_types"]]
+            sc = [None if i not in c_eles else [1, 1, 1] for i in atom_types]
+
+        conf_frame.to('abacus/stru', 'STRU', pp_file=pp, numerical_orbital=orb, numerical_descriptor=dpks, mass=mass,
+                      mag=mag, sc=sc)
+        conf_frame.data["hubbard_u"]=np.array([[[1],[1]]])
+        if "hubbard_u" in conf_frame.data:
+            hubbard_u = conf_frame["hubbard_u"].flatten()
+
+            unique, idx = np.unique(hubbard_u, return_index=True)
+            hubbard_u = unique[np.argsort(idx)]
+
+            inputs.set_input("hubbard_u"," ".join([str(u) for u in hubbard_u]))
+            inputs.set_input("dft_plus_u","1")
+            atom_names = conf_frame["atom_names"]
+
+            orbital_corr=optional_input.get("orbital_corr", {})
+            orbital = [str(orbital_corr.get(elem,2))  if hubbard_u[i] !=0 else   str(-1) for i,elem in enumerate(atom_names)]
+
+            inputs.set_input("orbital_corr"," ".join(orbital))
+
+
+        inputs.write_input("INPUT")
+        inputs.write_kpt("KPT")
+        if optional_artifact:
+            for file_name, file_path in optional_artifact.items():
+                content = file_path.read_text()
+                Path(file_name).write_text(content)
+
+
 
 class PrepFpOpAbacus(OP):
     @classmethod
@@ -126,9 +201,10 @@ class PrepFpOpAbacus(OP):
                 "type_map": ip["type_map"],
                 "confs": confs,
                 "prep_image_config": ip["config"].get("prep", {}),
+                "optional_input": ip["config"].get("optional_input", {}),
             }
         )
-        op = PrepAbacus()
+        op = PrepUAbacus()
         return op.execute(op_in)  # type: ignore in the case of not importing fpop
 
 
