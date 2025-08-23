@@ -46,7 +46,7 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
         lmp_template_fname: str,
         plm_template_fname: Optional[str] = None,
         revisions: dict = {},
-        hubbard_u: dict = None,
+        hubbard_u: dict|None = None,
     ) -> None:
         if hubbard_u is None or hubbard_u == {}:
             raise ValueError("hubbard_u is required")
@@ -102,10 +102,10 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
 
             combinations = [dict(zip(keys, combo)) for combo in itertools.product(*values)]
             #[{'Fe': 0, 'Ge': 11, 'Nb': 11}]
-            all_atom_names = atom_names[ system["atom_types"] ]
+            # all_atom_names = atom_names[ system["atom_types"] ]
             result = []
             for comb in combinations:
-                result.append(" ".join([str(comb.get(elem,0))  for elem in all_atom_names]))
+                result.append(" ".join([str(comb.get(elem,0))  for elem in atom_names]))
 
             return result
     def make_cont(
