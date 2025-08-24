@@ -73,6 +73,8 @@ class PrepRunLmp(Steps):
         self._output_artifacts = {
             "logs": OutputArtifact(),
             "trajs": OutputArtifact(),
+            "ins": OutputArtifact(),
+
             "model_devis": OutputArtifact(),
             "plm_output": OutputArtifact(),
             "optional_outputs": OutputArtifact(),
@@ -176,6 +178,7 @@ def _prep_run_lmp(
                 output_artifact=[
                     "log",
                     "traj",
+                    "in",
                     "model_devi",
                     "plm_output",
                     "optional_output",
@@ -208,6 +211,8 @@ def _prep_run_lmp(
     ].value_from_parameter = prep_lmp.outputs.parameters["task_names"]
     prep_run_steps.outputs.artifacts["logs"]._from = run_lmp.outputs.artifacts["log"]
     prep_run_steps.outputs.artifacts["trajs"]._from = run_lmp.outputs.artifacts["traj"]
+    prep_run_steps.outputs.artifacts["ins"]._from = run_lmp.outputs.artifacts["in"]
+
     prep_run_steps.outputs.artifacts["model_devis"]._from = run_lmp.outputs.artifacts[
         "model_devi"
     ]

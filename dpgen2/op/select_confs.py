@@ -38,6 +38,8 @@ class SelectConfs(OP):
                 "conf_selector": ConfSelector,
                 "type_map": List[str],
                 "trajs": Artifact(Union[List[Path], HDF5Datasets]),
+                "ins": Artifact( List[Path]  ),
+
                 "model_devis": Artifact(Union[List[Path], HDF5Datasets]),
                 "optional_outputs": Artifact(List[Path], optional=True),
             }
@@ -80,7 +82,7 @@ class SelectConfs(OP):
 
         conf_selector = ip["conf_selector"]
         type_map = ip["type_map"]
-
+        ins= ip["ins"]
         trajs = ip["trajs"]
         model_devis = ip["model_devis"]
         optional_outputs = ip["optional_outputs"]
@@ -91,6 +93,7 @@ class SelectConfs(OP):
         confs, report = conf_selector.select(
             trajs,
             model_devis,
+            ins=ins,
             type_map=type_map,
             optional_outputs=optional_outputs,
         )

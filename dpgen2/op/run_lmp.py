@@ -80,6 +80,7 @@ class RunLmp(OP):
             {
                 "log": Artifact(Path),
                 "traj": Artifact(Path),
+                "in":Artifact(Path),
                 "model_devi": Artifact(Path),
                 "plm_output": Artifact(Path, optional=True),
                 "optional_output": Artifact(Path, optional=True),
@@ -201,7 +202,8 @@ class RunLmp(OP):
 
         ret_dict = {
             "log": work_dir / lmp_log_name,
-            "traj": work_dir / lmp_traj_name,
+            "in":  work_dir / lmp_input_name,
+            "traj":  work_dir / lmp_traj_name ,
             "model_devi": self.get_model_devi(work_dir / lmp_model_devi_name),
         }
         plm_output = (

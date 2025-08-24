@@ -118,6 +118,7 @@ class TrajRenderLammps(TrajRender):
         type_map: Optional[List[str]] = None,
         conf_filters: Optional["ConfFilters"] = None,
         optional_outputs: Optional[List[Path]] = None,
+        ins: Optional[List[Path]] = None,
     ) -> dpdata.MultiSystems:
         ntraj = len(trajs)
         ele_temp = None
@@ -132,12 +133,15 @@ class TrajRenderLammps(TrajRender):
             Path(lammps_input_file).write_text(self.lammps_input)
         else:
             lammps_input_file = None
+
         for ii in range(ntraj):
             if len(id_selected[ii]) > 0:
                 if isinstance(trajs[ii], HDF5Dataset):
                     traj = StringIO(trajs[ii].get_data())  # type: ignore
                 else:
                     traj = trajs[ii]
+                if ins is not None:
+                    lammps_input_file=ins[ii]
                 # for spin job, need to read input file to get the key of the spin data
                 ss = dpdata.System(
                     traj, fmt=traj_fmt, type_map=type_map, input_file=lammps_input_file
