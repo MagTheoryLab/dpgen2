@@ -32,6 +32,42 @@ from .task import (
 )
 
 
+def get_u_values(type_: str,
+               list_values=None,
+               low=None, high=None,
+               size=1, decimals=None)->List[float]:
+    """
+    Generic value sampler based on type_.
+
+    Parameters
+    ----------
+    type_      : str   - 'list' or 'range'
+    list_values: list  - required when type_='list', e.g. [1.5, 2.7, 3.14]
+    low / high : float - required when type_='range', inclusive interval [low, high]
+    size       : int   - number of samples to return
+    decimals   : int   - only for type_='range', number of decimal places to keep
+                         (None keeps full float64 precision)
+
+    Returns
+    -------
+    List[float]
+    """
+    if type_ == "list":
+        if list_values is None:
+            raise ValueError("list_values must be provided when type_='list'")
+        return np.random.choice(list_values, size=size).tolist()
+
+    elif type_ == "range":
+        if low is None or high is None:
+            raise ValueError("low and high must be provided when type_='range'")
+        vals = np.random.uniform(low, high, size=size)
+        if decimals is not None:
+            vals = np.round(vals, decimals)
+        return vals.tolist()
+
+    else:
+        raise ValueError("type_ must be either 'list' or 'range'")
+
 class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
     def __init__(
         self,
@@ -71,13 +107,13 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
         confs = self._sample_confs()
         templates = [self.lmp_template]
         for cc  in confs:
-            self.revisions["V_APARAM"] = [np.random.choice(self.make_u(cc))]
+            self.revisions["V_APARAM"] =  self.make_u(cc,return_size=1)
             conts = self.make_cont(templates, self.revisions)
             nconts = len(conts[0])
             for   ii in   range(nconts ):  # type: ignore
                 self.add_task(self._make_lmp_task(cc, conts[0][ii]))
         return self
-    def make_u(self,conf:str):
+    def make_u(self,conf:str,return_size=1):
         u_dict= {}
         with tempfile.NamedTemporaryFile() as ft:
             tf = Path(ft.name)
@@ -88,7 +124,7 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
 
             atom_names = np.array(system["atom_names"],dtype=str)
             use_elements = atom_names[np.unique(system["atom_types"])]
-            # print(use_elements)
+
             #['Fe' 'Ge']
             for key in use_elements:
                 #这一步可以进一步指定策略
@@ -96,18 +132,25 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
                     continue
                 if len(self.hubbard_u[key]["u"])==0:
                     continue
-                u_dict[key] = self.hubbard_u[key]["u"]
+
+
+                u_dict[key] = get_u_values(self.hubbard_u[key].get("type","list"),
+                                           self.hubbard_u[key]["u"],
+                                           low=self.hubbard_u[key]["u"][0],
+                                           high=self.hubbard_u[key]["u"][-1],
+                                           size=1,
+                                           decimals=2
+                             )
             keys = list(u_dict.keys())
-            values = [u_dict[k] for k in keys]
+            values =list(u_dict.values())
 
             combinations = [dict(zip(keys, combo)) for combo in itertools.product(*values)]
             #[{'Fe': 0, 'Ge': 11, 'Nb': 11}]
-            # all_atom_names = atom_names[ system["atom_types"] ]
             result = []
             for comb in combinations:
                 result.append(" ".join([str(comb.get(elem,0))  for elem in atom_names]))
 
-            return result
+            return np.random.choice(result,size=return_size)
     def make_cont(
         self,
         templates: list,
