@@ -71,7 +71,7 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
         confs = self._sample_confs()
         templates = [self.lmp_template]
         for cc  in confs:
-            self.revisions["V_APARAM"] = self.make_u(cc)
+            self.revisions["V_APARAM"] = [np.random.choice(self.make_u(cc))]
             conts = self.make_cont(templates, self.revisions)
             nconts = len(conts[0])
             for   ii in   range(nconts ):  # type: ignore
