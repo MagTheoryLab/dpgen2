@@ -139,7 +139,7 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
                                            low=self.hubbard_u[key]["u"][0],
                                            high=self.hubbard_u[key]["u"][-1],
                                            size=1,
-                                           decimals=2
+                                           decimals=self.hubbard_u[key].get("decimals",2)
                              )
             keys = list(u_dict.keys())
             values =list(u_dict.values())
