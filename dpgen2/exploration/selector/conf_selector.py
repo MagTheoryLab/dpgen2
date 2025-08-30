@@ -39,5 +39,5 @@ class ConfSelector(ABC):
         optional_outputs: Optional[List[Path]] = None,
         ins: Optional[List[Path]] = None,
 
-    ) -> Tuple[List[Path], ExplorationReport]:
+    ) -> Tuple[List[Path], List[Path], ExplorationReport]:
         pass

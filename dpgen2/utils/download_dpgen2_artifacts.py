@@ -63,7 +63,8 @@ op_download_setting = {
     "prep-run-explore": DownloadDefinition()
     .add_output("logs")
     .add_output("trajs")
-    .add_output("model_devis"),
+    .add_output("model_devis")
+    .add_output("extra_outputs"),
     "prep-run-fp": DownloadDefinition()
     .add_input("confs")
     .add_output("logs")
