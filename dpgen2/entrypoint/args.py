@@ -33,6 +33,7 @@ from dpgen2.op.run_lmp import (
 )
 from dpgen2.utils import (
     normalize_step_dict,
+    normalize_step_list,
     step_conf_args,
 )
 
@@ -742,7 +743,7 @@ def dpgen_step_config_args(default_config):
     doc_prep_explore_config = "Configuration for prepare exploration"
     doc_run_explore_config = "Configuration for run exploration"
     doc_prep_fp_config = "Configuration for prepare fp"
-    doc_run_fp_config = "Configuration for run fp"
+    doc_run_fp_config = "Configuration for run fp. Accepts a single dict or a list of dicts for multiple executors."
     doc_select_confs_config = "Configuration for the select confs"
     doc_collect_data_config = "Configuration for the collect data"
     doc_cl_step_config = "Configuration for the concurrent learning step"
@@ -790,7 +791,7 @@ def dpgen_step_config_args(default_config):
         ),
         Argument(
             "run_fp_config",
-            dict,
+            [dict, List[dict]],
             step_conf_args(),
             optional=True,
             default=default_config,
@@ -891,6 +892,9 @@ def normalize(data):
     data = base.normalize_value(data, trim_pattern="_*")
     # not possible to strictly check arguments, dirty hack!
     base.check_value(data, strict=False)
+    step_configs = data.setdefault("step_configs", {})
+    run_fp_conf = step_configs.get("run_fp_config", default_step_config)
+    step_configs["run_fp_config"] = normalize_step_list(run_fp_conf)
     return data
 
 

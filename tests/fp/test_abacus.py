@@ -26,6 +26,8 @@ from dpgen2.superop import (
 
 class TestFpOpAbacus(unittest.TestCase):
     def tearDown(self):
+        pass
+
         if Path("upload").is_dir():
             shutil.rmtree("upload")
         if Path("output").is_dir():
@@ -39,6 +41,9 @@ class TestFpOpAbacus(unittest.TestCase):
             "inputs": FpOpAbacusInputs(
                 data_path / "INPUT", {"Na": data_path / "Na_ONCV_PBE-1.0.upf"}
             ),
+            "optional_input":{"orbital_corr":{
+                "Na":2
+              }},
             "run": {
                 "command": "cp -r %s OUT.ABACUS && cat %s"
                 % (data_path / "OUT.ABACUS", data_path / "log"),

@@ -184,7 +184,12 @@ class RunDPTrain(OP):
         finetune_mode = ip["optional_parameter"]["finetune_mode"]
         config = ip["config"] if ip["config"] is not None else {}
         impl = ip["config"].get("impl", "tensorflow")
-        dp_command = ip["config"].get("command", "dp").split()
+        ########################################################
+        # dp_command = ip["config"].get("command", "dp").split()
+        import shlex
+        dp_command = ip["config"].get("command", "dp")
+        dp_command = shlex.split(dp_command)
+        ########################################################
         assert impl in ["tensorflow", "pytorch"]
         if impl == "pytorch":
             dp_command.append("--pt")

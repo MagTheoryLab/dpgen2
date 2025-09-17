@@ -164,7 +164,7 @@ def make_concurrent_learning_op(
     prep_explore_config: dict = default_config,
     run_explore_config: dict = default_config,
     prep_fp_config: dict = default_config,
-    run_fp_config: dict = default_config,
+    run_fp_config: Union[dict, List[dict]] = default_config,
     select_confs_config: dict = default_config,
     collect_data_config: dict = default_config,
     cl_step_config: dict = default_config,
@@ -174,6 +174,8 @@ def make_concurrent_learning_op(
     explore_config: Optional[dict] = None,
     async_fp: bool = False,
 ):
+    if isinstance(run_fp_config, list):
+        run_fp_config = run_fp_config[0]
     if train_style in ("dp", "dp-dist"):
         prep_run_train_op = PrepRunDPTrain(
             "prep-run-dp-train",
@@ -503,7 +505,24 @@ def workflow_concurrent_learning(
     prep_explore_config = config["step_configs"]["prep_explore_config"]
     run_explore_config = config["step_configs"]["run_explore_config"]
     prep_fp_config = config["step_configs"]["prep_fp_config"]
-    run_fp_config = config["step_configs"]["run_fp_config"]
+    run_fp_configs = config["step_configs"]["run_fp_config"]
+    dispatch_groups = []
+    for idx, cfg in enumerate(run_fp_configs):
+        weight = cfg.get("weight", 1.0)
+        try:
+            weight = float(weight)
+        except (TypeError, ValueError):
+            weight = 1.0
+        if weight <= 0:
+            weight = 1.0
+        dispatch_groups.append(
+            {
+                "index": idx,
+                "name": cfg.get("name") or f"group-{idx}",
+                "weight": weight,
+            }
+        )
+    primary_run_fp_config = run_fp_configs[0]
     select_confs_config = config["step_configs"]["select_confs_config"]
     collect_data_config = deepcopy(config["step_configs"]["collect_data_config"])
     cl_step_config = config["step_configs"]["cl_step_config"]
@@ -571,7 +590,7 @@ def workflow_concurrent_learning(
         prep_explore_config=prep_explore_config,
         run_explore_config=run_explore_config,
         prep_fp_config=prep_fp_config,
-        run_fp_config=run_fp_config,
+        run_fp_config=primary_run_fp_config,
         select_confs_config=select_confs_config,
         collect_data_config=collect_data_config,
         cl_step_config=cl_step_config,
@@ -613,7 +632,9 @@ def workflow_concurrent_learning(
     fp_inputs = fp_styles[fp_style]["inputs"](**fp_inputs_config)
 
     fp_config["inputs"] = fp_inputs
-    fp_config["run"] = config["fp"]["run_config"]
+    fp_run_config = deepcopy(config["fp"]["run_config"])
+    fp_run_config["dispatch"] = {"groups": dispatch_groups}
+    fp_config["run"] = fp_run_config
 
     fp_config["extra_output_files"] = config["fp"]["extra_output_files"]
     if fp_style == "deepmd":

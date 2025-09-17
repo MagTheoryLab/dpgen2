@@ -42,6 +42,7 @@ from .step_config import (
     init_executor,
 )
 from .step_config import normalize as normalize_step_dict
+from .step_config import normalize_list as normalize_step_list
 from .step_config import (
     step_conf_args,
 )

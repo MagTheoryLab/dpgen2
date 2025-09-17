@@ -1,3 +1,4 @@
+import copy
 import os
 
 import dargs
@@ -23,7 +24,7 @@ def dispatcher_args():
 
 
 def variant_executor():
-    doc = f"The type of the executor."
+    doc = "The type of the executor."
     return Variant(
         "type",
         [
@@ -63,7 +64,10 @@ def template_conf_args():
 
 
 def template_slice_conf_args():
-    doc_group_size = "The number of tasks running on a single node. It is efficient for a large number of short tasks."
+    doc_group_size = (
+        "The number of tasks running on a single node. It is efficient for a large number"
+        " of short tasks."
+    )
     doc_pool_size = "The number of tasks running at the same time on one node."
     return [
         Argument("group_size", int, optional=True, default=None, doc=doc_group_size),
@@ -75,10 +79,23 @@ def step_conf_args():
     doc_template = "The configs passed to the PythonOPTemplate."
     doc_template_slice = "The configs passed to the Slices."
     doc_executor = "The executor of the step."
-    doc_continue_on_failed = "If continue the the step is failed (FatalError, TransientError, A certain number of retrial is reached...)."
-    doc_continue_on_num_success = "Only in the sliced OP case. Continue the workflow if a certain number of the sliced jobs are successful."
-    doc_continue_on_success_ratio = "Only in the sliced OP case. Continue the workflow if a certain ratio of the sliced jobs are successful."
+    doc_continue_on_failed = (
+        "If continue the the step is failed (FatalError, TransientError, A certain number"
+        " of retrial is reached...)."
+    )
+    doc_continue_on_num_success = (
+        "Only in the sliced OP case. Continue the workflow if a certain number of the"
+        " sliced jobs are successful."
+    )
+    doc_continue_on_success_ratio = (
+        "Only in the sliced OP case. Continue the workflow if a certain ratio of the"
+        " sliced jobs are successful."
+    )
     doc_parallelism = "The parallelism for the step"
+    doc_name = "An optional human readable name for the step configuration."
+    doc_weight = (
+        "Relative capacity weight when distributing tasks across multiple executors."
+    )
 
     return [
         Argument(
@@ -127,16 +144,25 @@ def step_conf_args():
             default=None,
             doc=doc_executor,
         ),
+        Argument("name", str, optional=True, default=None, doc=doc_name),
+        Argument("weight", float, optional=True, default=None, doc=doc_weight),
     ]
 
 
 def normalize(data):
+    data = copy.deepcopy(data)
     sca = step_conf_args()
     base = Argument("base", dict, sca)
     data = base.normalize_value(data, trim_pattern="_*")
     # not possible to strictly check dispatcher arguments, dirty hack!
     base.check_value(data, strict=False)
     return data
+
+
+def normalize_list(data):
+    if isinstance(data, list):
+        return [normalize(ii) for ii in data]
+    return [normalize(data)]
 
 
 def gen_doc(*, make_anchor=True, make_link=True, **kwargs):
@@ -159,6 +185,7 @@ def init_executor(
 ):
     if executor_dict is None:
         return None
+    executor_dict = copy.deepcopy(executor_dict)
     etype = executor_dict.pop("type")
     if etype == "dispatcher":
         return DispatcherExecutor(**executor_dict)
