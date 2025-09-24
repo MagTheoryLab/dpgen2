@@ -126,6 +126,7 @@ from dpgen2.superop import (
     PrepRunDiffCSP,
     PrepRunDPTrain,
     PrepRunFp,
+    PrepSplitRunFp,
     PrepRunLmp,
 )
 from dpgen2.superop.caly_evo_step import (
@@ -173,9 +174,23 @@ def make_concurrent_learning_op(
     train_optional_files: Optional[List[str]] = None,
     explore_config: Optional[dict] = None,
     async_fp: bool = False,
+    dispatch_groups: Optional[List[Dict]] = None,
+    use_split_fp: bool = False,
 ):
-    if isinstance(run_fp_config, list):
-        run_fp_config = run_fp_config[0]
+
+    if use_split_fp:
+        if not isinstance(run_fp_config, list):
+            run_fp_config_list = [run_fp_config]
+        else:
+            run_fp_config_list = run_fp_config
+        run_fp_config = run_fp_config_list[0]
+    else:
+        if isinstance(run_fp_config, list):
+            run_fp_config_list = run_fp_config
+            run_fp_config = run_fp_config_list[0]
+
+        else:
+            run_fp_config_list = [run_fp_config]
     if train_style in ("dp", "dp-dist"):
         prep_run_train_op = PrepRunDPTrain(
             "prep-run-dp-train",
@@ -251,17 +266,29 @@ def make_concurrent_learning_op(
         raise RuntimeError(f"unknown explore_style {explore_style}")
 
     if fp_style in fp_styles.keys():
-        prep_run_fp_op = PrepRunFp(
-            "prep-run-fp",
-            fp_styles[fp_style]["prep"],
-            fp_styles[fp_style]["run"],
-            prep_config=prep_fp_config,
-            run_config=run_fp_config,
-            upload_python_packages=upload_python_packages,
-        )
+        if use_split_fp:
+            if dispatch_groups is None:
+                raise RuntimeError("dispatch_groups required when use_split_fp is True")
+            prep_run_fp_op = PrepSplitRunFp(
+                "prep-run-fp",
+                fp_styles[fp_style]["prep"],
+                fp_styles[fp_style]["run"],
+                run_configs=run_fp_config_list,
+                dispatch_groups=dispatch_groups,
+                prep_config=prep_fp_config,
+                upload_python_packages=upload_python_packages,
+            )
+        else:
+            prep_run_fp_op = PrepRunFp(
+                "prep-run-fp",
+                fp_styles[fp_style]["prep"],
+                fp_styles[fp_style]["run"],
+                prep_config=prep_fp_config,
+                run_config=run_fp_config,
+                upload_python_packages=upload_python_packages,
+            )
     else:
         raise RuntimeError(f"unknown fp_style {fp_style}")
-
     # ConcurrentLearningBlock
     block_cl_op = ConcurrentLearningBlock(
         "concurrent-learning-block",
@@ -505,24 +532,33 @@ def workflow_concurrent_learning(
     prep_explore_config = config["step_configs"]["prep_explore_config"]
     run_explore_config = config["step_configs"]["run_explore_config"]
     prep_fp_config = config["step_configs"]["prep_fp_config"]
-    run_fp_configs = config["step_configs"]["run_fp_config"]
+    run_fp_step_configs = config["step_configs"]["run_fp_config"]
+    split_run_fp = config["fp"].get("split_run_fp", False)
+    if isinstance(run_fp_step_configs,dict):
+        run_fp_step_configs=[run_fp_step_configs]
     dispatch_groups = []
-    for idx, cfg in enumerate(run_fp_configs):
-        weight = cfg.get("weight", 1.0)
+    run_fp_configs=[]
+    for idx, cfg in enumerate(run_fp_step_configs):
+        cfg_copy=deepcopy(cfg)
+        weight = cfg_copy.pop("weight", None)
+
+        if weight is None:
+            weight = 1.0
         try:
             weight = float(weight)
         except (TypeError, ValueError):
             weight = 1.0
         if weight <= 0:
             weight = 1.0
-        dispatch_groups.append(
-            {
-                "index": idx,
-                "name": cfg.get("name") or f"group-{idx}",
-                "weight": weight,
-            }
-        )
-    primary_run_fp_config = run_fp_configs[0]
+        dispatch_groups.append({
+            "index": idx,
+            "name":   f"group-{idx}",
+            "weight": weight,
+        })
+        run_fp_configs.append(cfg_copy)
+
+    use_split_fp = split_run_fp and len(run_fp_configs) > 1
+
     select_confs_config = config["step_configs"]["select_confs_config"]
     collect_data_config = deepcopy(config["step_configs"]["collect_data_config"])
     cl_step_config = config["step_configs"]["cl_step_config"]
@@ -590,7 +626,9 @@ def workflow_concurrent_learning(
         prep_explore_config=prep_explore_config,
         run_explore_config=run_explore_config,
         prep_fp_config=prep_fp_config,
-        run_fp_config=primary_run_fp_config,
+        run_fp_config=run_fp_configs if use_split_fp else run_fp_configs[0],
+        dispatch_groups=dispatch_groups if len(dispatch_groups)>0 else None,
+        use_split_fp=use_split_fp,
         select_confs_config=select_confs_config,
         collect_data_config=collect_data_config,
         cl_step_config=cl_step_config,
@@ -633,7 +671,8 @@ def workflow_concurrent_learning(
 
     fp_config["inputs"] = fp_inputs
     fp_run_config = deepcopy(config["fp"]["run_config"])
-    fp_run_config["dispatch"] = {"groups": dispatch_groups}
+    if use_split_fp:
+        fp_run_config["dispatch"] = {"groups": dispatch_groups}
     fp_config["run"] = fp_run_config
 
     fp_config["extra_output_files"] = config["fp"]["extra_output_files"]
@@ -955,3 +994,6 @@ def resubmit_concurrent_learning(
     )
 
     return wf
+
+
+

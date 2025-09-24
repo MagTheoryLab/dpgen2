@@ -12,6 +12,7 @@ from .prep_run_dp_train import (
 )
 from .prep_run_fp import (
     PrepRunFp,
+    PrepSplitRunFp,
 )
 from .prep_run_lmp import (
     PrepRunLmp,

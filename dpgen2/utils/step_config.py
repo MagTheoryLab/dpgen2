@@ -92,10 +92,7 @@ def step_conf_args():
         " sliced jobs are successful."
     )
     doc_parallelism = "The parallelism for the step"
-    doc_name = "An optional human readable name for the step configuration."
-    doc_weight = (
-        "Relative capacity weight when distributing tasks across multiple executors."
-    )
+
 
     return [
         Argument(
@@ -144,8 +141,6 @@ def step_conf_args():
             default=None,
             doc=doc_executor,
         ),
-        Argument("name", str, optional=True, default=None, doc=doc_name),
-        Argument("weight", float, optional=True, default=None, doc=doc_weight),
     ]
 
 

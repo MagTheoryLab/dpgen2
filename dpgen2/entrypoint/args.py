@@ -475,6 +475,7 @@ def variant_explore():
 def fp_args(inputs, run):
     doc_inputs_config = "Configuration for preparing vasp inputs"
     doc_run_config = "Configuration for running vasp tasks"
+    doc_split_run_fp = "Whether to enable multi-executor FP splitting"
     doc_task_max = "Maximum number of vasp tasks for each iteration"
     doc_async_ratio = "Configuration ratio for async fp"
     doc_extra_output_files = "Extra output file names, support wildcards"
@@ -493,6 +494,9 @@ def fp_args(inputs, run):
             run.args(),
             optional=False,
             doc=doc_run_config,
+        ),
+        Argument(
+            "split_run_fp", bool, optional=True, default=False, doc=doc_split_run_fp
         ),
         Argument("task_max", int, optional=True, default=10, doc=doc_task_max),
         Argument(
