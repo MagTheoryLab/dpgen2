@@ -548,10 +548,7 @@ def _prep_split_run_fp(
         )
 
         select_steps.append(select_step)
-
         run_cfg_copy = deepcopy(run_cfg)
-        run_cfg_copy.pop("__meta__", None)
-
         run_template_config = run_cfg_copy.pop("template_config")
         run_executor = init_executor(run_cfg_copy.pop("executor"))
         template_slice_config = run_cfg_copy.pop("template_slice_config", {})

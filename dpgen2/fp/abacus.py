@@ -124,8 +124,9 @@ class PrepUAbacus(PrepAbacus):
         #debug
         # conf_frame.data["hubbard_u"]=np.array([[[1],[1]]])
         if "hubbard_u" in conf_frame.data:
+            sort_idx = np.argsort(conf_frame.data["atom_types"])
             hubbard_u = conf_frame["hubbard_u"].flatten()
-
+            hubbard_u = hubbard_u[sort_idx]
             unique, idx = np.unique(hubbard_u, return_index=True)
             hubbard_u = unique[np.argsort(idx)]
 

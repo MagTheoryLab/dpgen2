@@ -270,7 +270,7 @@ def make_concurrent_learning_op(
             if dispatch_groups is None:
                 raise RuntimeError("dispatch_groups required when use_split_fp is True")
             prep_run_fp_op = PrepSplitRunFp(
-                "prep-run-fp",
+                "prep-run-split-fp",
                 fp_styles[fp_style]["prep"],
                 fp_styles[fp_style]["run"],
                 run_configs=run_fp_config_list,
