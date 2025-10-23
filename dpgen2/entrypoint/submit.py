@@ -549,7 +549,7 @@ def workflow_concurrent_learning(
         except (TypeError, ValueError):
             weight = 1.0
         if weight <= 0:
-            weight = 1.0
+            weight =  0
         dispatch_groups.append({
             "index": idx,
             "name":   f"group-{idx}",
