@@ -822,12 +822,21 @@ def copy_scheduler_plans(
                     f"the stage {ii} of the old scheduler. "
                     f"scheduler, which should not happen"
                 )
-            for report in old_reports:
-                scheduler_new.plan_next_iteration(report)
-            if old_stage.complete() and (
-                not scheduler_new.stage_schedulers[ii].complete()
-            ):
-                scheduler_new.force_stage_complete()
+            if old_stage.complete():
+                # Copy all reports for a completed stage.
+                for report in old_reports:
+                    scheduler_new.plan_next_iteration(report)
+                # Ensure completion state matches; otherwise force complete.
+                if not scheduler_new.stage_schedulers[ii].complete():
+                    scheduler_new.force_stage_complete()
+            else:
+                # Current (incomplete) stage: copy all but the last report.
+                # The last report will be fed once later in submit_concurrent_learning
+                # via scheduler_new.plan_next_iteration(exploration_report,...).
+                if len(old_reports) > 0:
+                    for report in old_reports[:-1]:
+                        scheduler_new.plan_next_iteration(report)
+                break
         else:
             break
     return scheduler_new
