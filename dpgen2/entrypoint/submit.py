@@ -839,6 +839,27 @@ def copy_scheduler_plans(
                 break
         else:
             break
+    # If the new scheduler has more stages than the old one, the recursive
+    # calls inside `scheduler_new.plan_next_iteration` will have planned
+    # one dummy iteration (with `report=None`) on the first *extra* stage.
+    # This advances the global iteration index by one, which makes the
+    # next DPGEN iteration start from `iter+1` (e.g. jumping from 5 to 7).
+    # Roll back this dummy planning so that the next iteration index
+    # matches the old scheduler.
+    n_old = len(scheduler_old.stage_schedulers)
+    n_new = len(scheduler_new.stage_schedulers)
+    if n_new > n_old:
+        extra_stage = scheduler_new.stage_schedulers[n_old]
+        # The dummy planning leaves `next_iteration()==1` and no reports.
+        try:
+            if extra_stage.next_iteration() == 1 and len(extra_stage.get_reports()) == 0:
+                # Best-effort rollback for ConvergenceCheckStageScheduler.
+                if hasattr(extra_stage, "nxt_iter"):
+                    extra_stage.nxt_iter = 0
+        except Exception:
+            # Be conservative: if anything unexpected happens, keep the
+            # original behaviour instead of risking corrupting the state.
+            pass
     return scheduler_new
 
 
@@ -867,28 +888,41 @@ def submit_concurrent_learning(
         exploration_report = (
             reuse_step[idx_old].inputs.parameters["exploration_report"].value
         )
-        # plan next
-        # hack! trajs is set to None...
-        conv, expl_task_grp, selector = scheduler_new.plan_next_iteration(
-            exploration_report, trajs=None
-        )
-        # update output of the scheduler step
-        reuse_step[idx_old].modify_output_parameter(
-            "converged",
-            conv,
-        )
-        reuse_step[idx_old].modify_output_parameter(
-            "exploration_scheduler",
-            scheduler_new,
-        )
-        reuse_step[idx_old].modify_output_parameter(
-            "expl_task_grp",
-            expl_task_grp,
-        )
-        reuse_step[idx_old].modify_output_parameter(
-            "conf_selector",
-            selector,
-        )
+        # For an incomplete scheduler, the last report of the current stage
+        # has not been copied in `copy_scheduler_plans` and must be fed once
+        # here so that the planned next iteration (and its task group /
+        # selector) matches the new scheduler config.
+        # For a fully completed scheduler, feeding the last report again
+        # would incorrectly create an extra iteration, so we only swap the
+        # scheduler object in that case.
+        if hasattr(scheduler_old, "complete") and not scheduler_old.complete():
+            # plan next
+            # hack! trajs is set to None...
+            conv, expl_task_grp, selector = scheduler_new.plan_next_iteration(
+                exploration_report, trajs=None
+            )
+            # update output of the scheduler step
+            reuse_step[idx_old].modify_output_parameter(
+                "converged",
+                conv,
+            )
+            reuse_step[idx_old].modify_output_parameter(
+                "exploration_scheduler",
+                scheduler_new,
+            )
+            reuse_step[idx_old].modify_output_parameter(
+                "expl_task_grp",
+                expl_task_grp,
+            )
+            reuse_step[idx_old].modify_output_parameter(
+                "conf_selector",
+                selector,
+            )
+        else:
+            reuse_step[idx_old].modify_output_parameter(
+                "exploration_scheduler",
+                scheduler_new,
+            )
 
     wf = Workflow(name=wf_config["name"], parallelism=wf_config["parallelism"])
 
