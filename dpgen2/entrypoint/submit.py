@@ -147,6 +147,9 @@ from dpgen2.utils import (
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
+
+logger = logging.getLogger(__name__)
+
 default_config = normalize_step_dict(
     {
         "template_config": {
@@ -801,6 +804,24 @@ def copy_scheduler_plans(
     scheduler_new,
     scheduler_old,
 ):
+    # Debug: log old scheduler state before copying
+    try:
+        logger.info(
+            "copy_scheduler_plans: OLD get_iteration=%s complete=%s",
+            scheduler_old.get_iteration(),
+            scheduler_old.complete(),
+        )
+        for ii, st in enumerate(scheduler_old.stage_schedulers):
+            logger.info(
+                "copy_scheduler_plans: OLD stage %d next_iter=%s n_reports=%d complete=%s",
+                ii,
+                st.next_iteration(),
+                len(st.get_reports()),
+                st.complete(),
+            )
+    except Exception:
+        logger.debug("copy_scheduler_plans: failed to log OLD scheduler", exc_info=True)
+
     if len(scheduler_old.stage_schedulers) == 0:
         return scheduler_new
     if len(scheduler_new.stage_schedulers) < len(scheduler_old.stage_schedulers):
@@ -822,44 +843,54 @@ def copy_scheduler_plans(
                     f"the stage {ii} of the old scheduler. "
                     f"scheduler, which should not happen"
                 )
-            if old_stage.complete():
-                # Copy all reports for a completed stage.
-                for report in old_reports:
-                    scheduler_new.plan_next_iteration(report)
-                # Ensure completion state matches; otherwise force complete.
-                if not scheduler_new.stage_schedulers[ii].complete():
-                    scheduler_new.force_stage_complete()
-            else:
-                # Current (incomplete) stage: copy all but the last report.
-                # The last report will be fed once later in submit_concurrent_learning
-                # via scheduler_new.plan_next_iteration(exploration_report,...).
-                if len(old_reports) > 0:
-                    for report in old_reports[:-1]:
-                        scheduler_new.plan_next_iteration(report)
-                break
+            for report in old_reports:
+                scheduler_new.plan_next_iteration(report)
+            if old_stage.complete() and (
+                not scheduler_new.stage_schedulers[ii].complete()
+            ):
+                scheduler_new.force_stage_complete()
         else:
             break
+
     # If the new scheduler has more stages than the old one, the recursive
-    # calls inside `scheduler_new.plan_next_iteration` will have planned
-    # one dummy iteration (with `report=None`) on the first *extra* stage.
-    # This advances the global iteration index by one, which makes the
-    # next DPGEN iteration start from `iter+1` (e.g. jumping from 5 to 7).
+    # calls inside `scheduler_new.plan_next_iteration` (triggered by
+    # `force_stage_complete`) will have planned one dummy iteration
+    # (with `report=None`) on the first extra stage. This advances the
+    # global iteration index by one without adding any report, which is
+    # not what we want when resubmitting from an intermediate iteration.
     # Roll back this dummy planning so that the next iteration index
     # matches the old scheduler.
     n_old = len(scheduler_old.stage_schedulers)
     n_new = len(scheduler_new.stage_schedulers)
     if n_new > n_old:
         extra_stage = scheduler_new.stage_schedulers[n_old]
-        # The dummy planning leaves `next_iteration()==1` and no reports.
         try:
             if extra_stage.next_iteration() == 1 and len(extra_stage.get_reports()) == 0:
-                # Best-effort rollback for ConvergenceCheckStageScheduler.
                 if hasattr(extra_stage, "nxt_iter"):
                     extra_stage.nxt_iter = 0
         except Exception:
-            # Be conservative: if anything unexpected happens, keep the
-            # original behaviour instead of risking corrupting the state.
-            pass
+            logger.debug(
+                "copy_scheduler_plans: failed to rollback dummy extra stage", exc_info=True
+            )
+
+    # Debug: log new scheduler state after copying
+    try:
+        logger.info(
+            "copy_scheduler_plans: NEW get_iteration=%s complete=%s",
+            scheduler_new.get_iteration(),
+            scheduler_new.complete(),
+        )
+        for ii, st in enumerate(scheduler_new.stage_schedulers):
+            logger.info(
+                "copy_scheduler_plans: NEW stage %d next_iter=%s n_reports=%d complete=%s",
+                ii,
+                st.next_iteration(),
+                len(st.get_reports()),
+                st.complete(),
+            )
+    except Exception:
+        logger.debug("copy_scheduler_plans: failed to log NEW scheduler", exc_info=True)
+
     return scheduler_new
 
 
@@ -885,49 +916,18 @@ def submit_concurrent_learning(
             reuse_step[idx_old].inputs.parameters["exploration_scheduler"].value
         )
         scheduler_new = copy_scheduler_plans(scheduler_new, scheduler_old)
-        exploration_report = (
-            reuse_step[idx_old].inputs.parameters["exploration_report"].value
+        # Only replace the scheduler object in the reused step; do not feed
+        # the last exploration_report into the new scheduler. This avoids
+        # creating an extra "fake" iteration (e.g. iter+1 with identical
+        # statistics) when resubmitting from an intermediate iteration.
+        reuse_step[idx_old].modify_output_parameter(
+            "exploration_scheduler",
+            scheduler_new,
         )
-        # For an incomplete scheduler, the last report of the current stage
-        # has not been copied in `copy_scheduler_plans` and must be fed once
-        # here so that the planned next iteration (and its task group /
-        # selector) matches the new scheduler config.
-        # For a fully completed scheduler, feeding the last report again
-        # would incorrectly create an extra iteration, so we only swap the
-        # scheduler object in that case.
-        if hasattr(scheduler_old, "complete") and not scheduler_old.complete():
-            # plan next
-            # hack! trajs is set to None...
-            conv, expl_task_grp, selector = scheduler_new.plan_next_iteration(
-                exploration_report, trajs=None
-            )
-            # update output of the scheduler step
-            reuse_step[idx_old].modify_output_parameter(
-                "converged",
-                conv,
-            )
-            reuse_step[idx_old].modify_output_parameter(
-                "exploration_scheduler",
-                scheduler_new,
-            )
-            reuse_step[idx_old].modify_output_parameter(
-                "expl_task_grp",
-                expl_task_grp,
-            )
-            reuse_step[idx_old].modify_output_parameter(
-                "conf_selector",
-                selector,
-            )
-        else:
-            reuse_step[idx_old].modify_output_parameter(
-                "exploration_scheduler",
-                scheduler_new,
-            )
 
     wf = Workflow(name=wf_config["name"], parallelism=wf_config["parallelism"])
 
     wf.add(dpgen_step)
-
     # for debug purpose, we may not really submit the wf
     if not no_submission:
         wf.submit(reuse_step=reuse_step)

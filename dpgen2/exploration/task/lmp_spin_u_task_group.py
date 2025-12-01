@@ -106,12 +106,14 @@ class LmpSpinUTaskGroup(ConfSamplingTaskGroup):
         self.clear()
         confs = self._sample_confs()
         templates = [self.lmp_template]
-        for cc  in confs:
-            self.revisions["V_APARAM"] =  self.make_u(cc,return_size=1)
+        self.revisions["V_APARAM"] = ["{U_VAL}"]
+        for cc in confs:
             conts = self.make_cont(templates, self.revisions)
-            nconts = len(conts[0])
-            for   ii in   range(nconts ):  # type: ignore
-                self.add_task(self._make_lmp_task(cc, conts[0][ii]))
+            for cont in conts[0]:
+                u_val = self.make_u(cc, return_size=1)[0]
+                lmp_cont = cont.replace("{U_VAL}", str(u_val))
+                task = self._make_lmp_task(cc, lmp_cont)
+                self.add_task(task)
         return self
     def make_u(self,conf:str,return_size=1):
         u_dict= {}
