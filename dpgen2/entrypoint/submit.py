@@ -912,9 +912,16 @@ def submit_concurrent_learning(
             dpgen_step.inputs.parameters["exploration_scheduler"].value
         )
         idx_old = get_scheduler_ids(reuse_step)[-1]
-        scheduler_old = (
-            reuse_step[idx_old].inputs.parameters["exploration_scheduler"].value
-        )
+        try:
+            # Use the updated scheduler state (after the last finished iteration) when
+            # copying plans; fall back to the original input only if outputs are absent.
+            scheduler_old = reuse_step[idx_old].outputs.parameters[
+                "exploration_scheduler"
+            ].value
+        except Exception:
+            scheduler_old = reuse_step[idx_old].inputs.parameters[
+                "exploration_scheduler"
+            ].value
         scheduler_new = copy_scheduler_plans(scheduler_new, scheduler_old)
         # Only replace the scheduler object in the reused step; do not feed
         # the last exploration_report into the new scheduler. This avoids
