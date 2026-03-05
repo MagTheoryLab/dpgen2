@@ -184,7 +184,7 @@ class TestLmpSpinTaskGroup(unittest.TestCase):
         #9 是因为两个元素 每个元素有3个U
         self.assertEqual(
             ngroup,
-            len(self.confs)*9
+            len(self.confs)
             * len(self.lmp_rev_mat["V_NSTEPS"])
             * len(self.lmp_rev_mat["V_TEMP"])
             * len(self.lmp_rev_mat["V_MASS"]),

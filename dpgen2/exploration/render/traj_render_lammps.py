@@ -72,6 +72,10 @@ class TrajRenderLammps(TrajRender):
             len(np.shape(dd)) == 1  # type: ignore
         ):  # In case model-devi.out is 1-dimensional
             dd = dd.reshape((1, len(dd)))  # type: ignore
+        # for glsd
+        _, unique_indices = np.unique(dd[:, 0], return_index=True)
+        unique_indices = np.sort(unique_indices)
+        dd = dd[unique_indices]
 
         model_devi.add(DeviManager.MAX_DEVI_V, dd[:, 1])  # type: ignore
         model_devi.add(DeviManager.MIN_DEVI_V, dd[:, 2])  # type: ignore

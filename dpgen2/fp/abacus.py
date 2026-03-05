@@ -124,15 +124,13 @@ class PrepUAbacus(PrepAbacus):
         #debug
         # conf_frame.data["hubbard_u"]=np.array([[[1],[1]]])
         if "hubbard_u" in conf_frame.data:
-            sort_idx = np.argsort(conf_frame.data["atom_types"])
+            unique, idx = np.unique(conf_frame.data["atom_types"], return_index=True)
             hubbard_u = conf_frame["hubbard_u"].flatten()
-            hubbard_u = hubbard_u[sort_idx]
-            unique, idx = np.unique(hubbard_u, return_index=True)
-            hubbard_u = unique[np.argsort(idx)]
+            hubbard_u = hubbard_u[idx]
 
             inputs.set_input("hubbard_u"," ".join([str(u) for u in hubbard_u]))
             inputs.set_input("dft_plus_u","1")
-            atom_names = conf_frame["atom_names"]
+            atom_names = [conf_frame["atom_names"][i] for i in unique]
 
             orbital_corr=optional_input.get("orbital_corr", {})
             orbital = [str(orbital_corr.get(elem,2))  if hubbard_u[i] !=0 else   str(-1) for i,elem in enumerate(atom_names)]
